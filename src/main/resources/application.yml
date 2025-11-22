@@ -1,0 +1,49 @@
+# Puerto estándar para un API Gateway (el front-end hablará aquí)
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        # --- Ruta para el servicio de Identidad (IAM) ---
+        - id: iam-service-route
+          # Esta es la magia: "lb" significa "Load Balancer" (balanceador de carga).
+          # "lb://IAM-SERVICE" significa: "Busca en Eureka un servicio llamado 'IAM-SERVICE'
+          # y reenvía la petición allí".
+          uri: lb://IAM-SERVICE
+          predicates:
+            # "Path=/api/auth/**" significa: Si una petición llega a este Gateway
+            # (localhost:8080) y su ruta empieza con "/api/auth/",
+            # entonces envíala a "iam-service".
+            - Path=/api/auth/**
+
+        # --- Ruta para el servicio de Subscripciones ---
+        - id: subscription-service-route
+          uri: lb://SUBSCRIPTION-SERVICE
+          predicates:
+            # Si la petición empieza con "/api/subscriptions/",
+            # envíala a "subscription-service".
+            - Path=/api/subscriptions/**
+
+        # --- Ruta para el servicio de Perfiles (que creamos antes) ---
+        - id: profile-service-route
+          uri: lb://PROFILE-SERVICE
+          predicates:
+            - Path=/api/profiles/**
+            # También puedes agrupar rutas para el mismo servicio
+            - Path=/api/distributors/**
+            - Path=/api/producers/**
+
+# --- Configuración del Cliente Eureka ---
+# El Gateway también debe registrarse para que sepamos que está vivo,
+# y necesita saber dónde está el directorio.
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
