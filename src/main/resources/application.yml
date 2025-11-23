@@ -1,49 +1,64 @@
-# Puerto estándar para un API Gateway (el front-end hablará aquí)
 server:
-  port: 8080
+  port: 8080 # El puerto estándar del Gateway
 
 spring:
   application:
     name: api-gateway
-
   cloud:
     gateway:
+      # Habilitar CORS globalmente para que Angular no se queje
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+            allowedHeaders: "*"
+      
       routes:
-        # --- Ruta para el servicio de Identidad (IAM) ---
-        - id: iam-service-route
-          # Esta es la magia: "lb" significa "Load Balancer" (balanceador de carga).
-          # "lb://IAM-SERVICE" significa: "Busca en Eureka un servicio llamado 'IAM-SERVICE'
-          # y reenvía la petición allí".
-          uri: lb://IAM-SERVICE
+        # --- RUTA 1: IAM SERVICE (Usuarios y Roles) ---
+        - id: iam-service
+          uri: lb://IAM-SERVICE  # "lb" = Load Balancer (Busca en Eureka)
           predicates:
-            # "Path=/api/auth/**" significa: Si una petición llega a este Gateway
-            # (localhost:8080) y su ruta empieza con "/api/auth/",
-            # entonces envíala a "iam-service".
-            - Path=/api/auth/**
+            # Si la URL empieza con esto, mándalo al IAM
+            - Path=/api/v1/authentication/**, /api/v1/users/**, /api/v1/roles/**
 
-        # --- Ruta para el servicio de Subscripciones ---
-        - id: subscription-service-route
-          uri: lb://SUBSCRIPTION-SERVICE
+        # --- RUTA 2: PROFILE SERVICE (Productores y Distribuidores) ---
+        - id: profile-service
+          uri: lb://PROFILE-SERVICE # Asegúrate que coincida con spring.application.name del profile
           predicates:
-            # Si la petición empieza con "/api/subscriptions/",
-            # envíala a "subscription-service".
-            - Path=/api/subscriptions/**
+            - Path=/api/v1/profiles/**
 
-        # --- Ruta para el servicio de Perfiles (que creamos antes) ---
-        - id: profile-service-route
-          uri: lb://PROFILE-SERVICE
+        # --- RUTA 3: STORE SERVICE (Productos y Pagos) ---
+        - id: store-service
+          uri: lb://STORE-SERVICE
           predicates:
-            - Path=/api/profiles/**
-            # También puedes agrupar rutas para el mismo servicio
-            - Path=/api/distributors/**
-            - Path=/api/producers/**
+            - Path=/api/v1/products/**, /api/v1/payments/**
 
-# --- Configuración del Cliente Eureka ---
-# El Gateway también debe registrarse para que sepamos que está vivo,
-# y necesita saber dónde está el directorio.
+        # --- RUTA 4: FIELDS SERVICE (Campos y Trabajadores) ---
+        - id: fields-service
+          uri: lb://FIELDS-SERVICE
+          predicates:
+            - Path=/api/v1/fields/**, /api/v1/workers/**
+
+        # --- RUTA 5: AGRICULTURAL PROCESS SERVICE ---
+        - id: process-service
+          uri: lb://AGRICULTURAL-PROCESS-SERVICE
+          predicates:
+            - Path=/api/v1/processes/**, /api/v1/activities/**
+
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
+
+# Configuración de Seguridad (Token)
+# Debe ser EXACTAMENTE la misma clave que en iam-service
+authorization:
+  jwt:
+    secret: 8Zz5tw0Ionm3XPZZfN0NOml3z9FMfmpgXwovR9fp6ryDIoGRM8EPHAB6iHsc0fb
