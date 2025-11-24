@@ -1,5 +1,5 @@
 server:
-  port: 8080 # El puerto estándar del Gateway
+  port: 8080 # El puerto estï¿½ndar del Gateway
 
 spring:
   application:
@@ -23,12 +23,12 @@ spring:
         - id: iam-service
           uri: lb://IAM-SERVICE  # "lb" = Load Balancer (Busca en Eureka)
           predicates:
-            # Si la URL empieza con esto, mándalo al IAM
+            # Si la URL empieza con esto, mï¿½ndalo al IAM
             - Path=/api/v1/authentication/**, /api/v1/users/**, /api/v1/roles/**
 
         # --- RUTA 2: PROFILE SERVICE (Productores y Distribuidores) ---
         - id: profile-service
-          uri: lb://PROFILE-SERVICE # Asegúrate que coincida con spring.application.name del profile
+          uri: lb://PROFILE-SERVICE # Asegï¿½rate que coincida con spring.application.name del profile
           predicates:
             - Path=/api/v1/profiles/**
 
@@ -36,7 +36,7 @@ spring:
         - id: store-service
           uri: lb://STORE-SERVICE
           predicates:
-            - Path=/api/v1/products/**, /api/v1/payments/**
+            - Path=/api/v1/products/**, /api/v1/payment-products/**
 
         # --- RUTA 4: FIELDS SERVICE (Campos y Trabajadores) ---
         - id: fields-service
@@ -48,7 +48,28 @@ spring:
         - id: process-service
           uri: lb://AGRICULTURAL-PROCESS-SERVICE
           predicates:
-            - Path=/api/v1/processes/**, /api/v1/activities/**
+            - Path=/api/v1/agricultural-processes**
+
+        # --- 6. PAYMENT SERVICE (Pagos) ---
+        # (NUEVO: AsegÃºrate de que su controller empiece con /api/v1/payments)
+        - id: payment-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/api/v1/payments/**
+
+        # --- 7. SUBSCRIPTION SERVICE (Suscripciones) ---
+        # (NUEVO: AsegÃºrate de que su controller empiece con /api/v1/subscriptions)
+        - id: subscription-service
+          uri: lb://SUBSCRIPTION-SERVICE
+          predicates:
+            - Path=/api/v1/subscriptions/**
+
+        # --- 8. FINANCES SERVICE (Finanzas) ---
+        # (NUEVO: AsegÃºrate de que su controller empiece con /api/v1/finances)
+        - id: finances-service
+          uri: lb://FINANCES-SERVICE
+          predicates:
+            - Path=/api/v1/finances/**
 
 eureka:
   client:
@@ -57,7 +78,7 @@ eureka:
   instance:
     prefer-ip-address: true
 
-# Configuración de Seguridad (Token)
+# Configuraciï¿½n de Seguridad (Token)
 # Debe ser EXACTAMENTE la misma clave que en iam-service
 authorization:
   jwt:
