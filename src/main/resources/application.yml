@@ -10,7 +10,9 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "*"
+            # allowedOrigins: "*"
+            allowedOrigins:
+              - "http://localhost:4200"
             allowedMethods:
               - GET
               - POST
@@ -48,7 +50,7 @@ spring:
         - id: process-service
           uri: lb://AGRICULTURAL-PROCESS-SERVICE
           predicates:
-            - Path=/api/v1/agricultural-processes**
+            - Path=/api/v1/agricultural-processes/**
 
         # --- 6. PAYMENT SERVICE (Pagos) ---
         # (NUEVO: Asegúrate de que su controller empiece con /api/v1/payments)
